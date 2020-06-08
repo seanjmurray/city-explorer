@@ -44,6 +44,11 @@ function Weather(obj,arr){
   arr.push(this);
 }
 
+////////////////////////////All other routes///////////////////////////
+app.get('*', (req,res)=>{
+  res.status(404).send('sorry, this route does not exist');
+
+})
 
 app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
 
