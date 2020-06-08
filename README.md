@@ -33,6 +33,8 @@ npm start
 ## Change Log
  - 06-08-2020 1531 - Application now has functional GET route for location.
 
+ - 06-08-2020 1615 Application now has function Get route for weather.
+
 
 
 ## Credits and Collaborations
@@ -49,3 +51,13 @@ npm start
 **Finish time:** 1530
 
 **Actual time needed to complete:** 30min
+
+**Number and name of feature:** Weather
+
+**Estimate of time needed to complete:** 30min
+
+**Start time:** 1545
+
+**Finish time:** 1600
+
+**Actual time needed to complete:** 15min

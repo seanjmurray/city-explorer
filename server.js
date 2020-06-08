@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 const PORT = process.env.PORT || 3001;
 
-//location route
+/////////////////////////location route////////////////////////////////
 app.get('/location',(req,res)=>{
   try{
     let apiData = require('./data/location.json');
@@ -16,13 +16,39 @@ app.get('/location',(req,res)=>{
     res.status(500).send('Sorry, something went wrong');
   }
 })
+///////////////////////LOCATION CONSTRUCTOR////////////////////////////
 function Location(search,obj){
   this.search_query=search;
   this.formatted_query=obj.display_name;
   this.latitude=obj.lat;
   this.longitude=obj.lon;
 }
+//////////////////////////Weather route////////////////////////////////
+app.get('/weather', (req,res)=>{
+  try{
+    let retArr = [];
+    let apiData = require('./data/weather.json');
+    apiData.data.forEach(day =>{
+      new Weather(day,retArr);
+    })
+    res.status(200).send(retArr);
+  }catch(err){
+    res.status(500).send('Sorry, something went wrong');
+  }
+})
 
+//////////////////////////WEATHER CONSTRUCTOR//////////////////////////
+function Weather(obj,arr){
+  this.forecast=obj.weather.description;
+  this.time=obj.valid_date;
+  arr.push(this);
+}
+
+////////////////////////////All other routes///////////////////////////
+app.get('*', (req,res)=>{
+  res.status(404).send('sorry, this route does not exist');
+
+})
 
 app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
 
