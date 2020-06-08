@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 const PORT = process.env.PORT || 3001;
 
-//location route
+/////////////////////////location route////////////////////////////////
 app.get('/location',(req,res)=>{
   try{
     let apiData = require('./data/location.json');
@@ -16,6 +16,7 @@ app.get('/location',(req,res)=>{
     res.status(500).send('Sorry, something went wrong');
   }
 })
+///////////////////////LOCATION CONSTRUCTOR////////////////////////////
 function Location(search,obj){
   this.search_query=search;
   this.formatted_query=obj.display_name;
