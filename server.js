@@ -23,6 +23,26 @@ function Location(search,obj){
   this.latitude=obj.lat;
   this.longitude=obj.lon;
 }
+//////////////////////////Weather route////////////////////////////////
+app.get('/weather', (req,res)=>{
+  try{
+    let retArr = [];
+    let apiData = require('./data/weather.json');
+    apiData.data.forEach(day =>{
+      new Weather(day,retArr);
+    })
+    res.status(200).send(retArr);
+  }catch(err){
+    res.status(500).send('Sorry, something went wrong');
+  }
+})
+
+//////////////////////////WEATHER CONSTRUCTOR//////////////////////////
+function Weather(obj,arr){
+  this.forecast=obj.weather.description;
+  this.time=obj.valid_date;
+  arr.push(this);
+}
 
 
 app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
