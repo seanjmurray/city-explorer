@@ -26,11 +26,8 @@ function Location(search,obj){
 //////////////////////////Weather route////////////////////////////////
 app.get('/weather', (req,res)=>{
   try{
-    let retArr = [];
     let apiData = require('./data/weather.json');
-    apiData.data.forEach(day =>{
-      new Weather(day,retArr);
-    })
+    let retArr = apiData.data.map(getWeather)
     res.status(200).send(retArr);
   }catch(err){
     res.status(500).send('Sorry, something went wrong');
@@ -38,16 +35,15 @@ app.get('/weather', (req,res)=>{
 })
 
 //////////////////////////WEATHER CONSTRUCTOR//////////////////////////
-function Weather(obj,arr){
+function Weather(obj){
   this.forecast=obj.weather.description;
   this.time=obj.valid_date;
-  arr.push(this);
 }
+const getWeather = (obj)=> new Weather(obj);
 
 ////////////////////////////All other routes///////////////////////////
 app.get('*', (req,res)=>{
   res.status(404).send('sorry, this route does not exist');
-
 })
 
 app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
