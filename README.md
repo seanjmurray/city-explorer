@@ -28,7 +28,12 @@ npm start
 ```
 
 ## Architecture
-<!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
+This API is designed to handle GET requests on /location and /weather routes to serve data to a front end.
+
+### Libraries Used:
+ - Express
+ - dotenv
+ - cors
 
 ## Change Log
  - 06-08-2020 1531 - Application now has functional GET route for location.
@@ -38,8 +43,7 @@ npm start
 
 
 ## Credits and Collaborations
-<!-- Give credit (and a link) to other people or resources that helped you build this application. -->
--->
+
 ## Time Estimations:
 
 **Number and name of feature:** Location
