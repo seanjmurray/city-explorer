@@ -27,7 +27,7 @@ function Location(search,obj){
 app.get('/weather', (req,res)=>{
   try{
     let apiData = require('./data/weather.json');
-    let retArr = apiData.data.map(getWeather)
+    let retArr = apiData.data.map((obj)=> new Weather(obj))
     res.status(200).send(retArr);
   }catch(err){
     res.status(500).send('Sorry, something went wrong');
@@ -39,7 +39,6 @@ function Weather(obj){
   this.forecast=obj.weather.description;
   this.time=obj.valid_date;
 }
-const getWeather = (obj)=> new Weather(obj);
 
 ////////////////////////////All other routes///////////////////////////
 app.get('*', (req,res)=>{
