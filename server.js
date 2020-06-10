@@ -4,18 +4,38 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
 app.use(cors());
 const PORT = process.env.PORT || 3001;
+const DB = process.env.DATABASE_URL;
+
+const client = new pg.Client(DB);
+client.on('error', err => console.error(err));
 
 /////////////////////////location route////////////////////////////////
 app.get('/location',(req,res)=>{
+  let search = req.query.city
   try{
-    let search = req.query.city
-    let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
-    superagent.get(url)
-      .then(apiData =>{
-        let retObj = new Location(search,apiData.body[0]);
-        res.status(200).send(retObj);
+    let sql = 'SELECT * FROM locations WHERE search_query LIKE ($1);';
+    let safe = [search];
+    client.query(sql,safe)
+      .then(dbData =>{
+        if(dbData.rowCount === 0){
+          let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
+          superagent.get(url)
+            .then(apiData =>{
+              let retObj = new Location(search,apiData.body[0]);
+              console.log('API ITEM')
+              res.status(200).send(retObj);
+              let sql = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4);'
+              let safe = [retObj.search_query,retObj.formatted_query,retObj.latitude,retObj.longitude];
+              client.query(sql,safe)
+                .then()
+            }).catch(err => console.log(err))
+        } else{
+          console.log('DB DATA')
+          res.status(200).send(dbData.rows[0]);
+        }
       }).catch(err => console.log(err))
   }catch(err){
     res.status(500).send('Sorry, something went wrong');
@@ -72,14 +92,16 @@ function Trail(obj){
   this.summary=obj.summary;
   this.trail_url=obj.url;
   this.conditions=`${obj.conditionDetails || ''} ${obj.conditionStatus}`;
-  this.conditions_date=obj.conditionDate.slice(0,obj.conditionDate.indexOf(' '));
-  this.conditions_time=obj.conditionDate.slice(obj.conditionDate.indexOf(' ')+1,obj.conditionDate.length);
+  this.condition_date = obj.conditionDate.split(' ')[0];
+  this.condition_time = obj.conditionDate.split(' ')[1];
 }
 
 ////////////////////////////All other routes///////////////////////////
 app.get('*', (req,res)=>{
   res.status(404).send('sorry, this route does not exist');
 })
-
-app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
+client.connect()
+  .then(()=> {
+    app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
+  });
 
