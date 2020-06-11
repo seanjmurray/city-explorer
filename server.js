@@ -13,95 +13,94 @@ const client = new pg.Client(DB);
 client.on('error', err => console.error(err));
 
 /////////////////////////location route////////////////////////////////
-app.get('/location',(req,res)=>{
+app.get('/location', (req, res) => {
   let search = req.query.city
-  try{
+  try {
     let sql = 'SELECT * FROM locations WHERE search_query LIKE ($1);';
     let safe = [search];
-    client.query(sql,safe)
-      .then(dbData =>{
-        if(dbData.rowCount === 0){
+    client.query(sql, safe)
+      .then(dbData => {
+        if (dbData.rowCount === 0) {
           let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
           superagent.get(url)
-            .then(apiData =>{
-              let retObj = new Location(search,apiData.body[0]);
+            .then(apiData => {
+              let retObj = new Location(search, apiData.body[0]);
               console.log('API ITEM')
               res.status(200).send(retObj);
               let sql = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4);'
-              let safe = [retObj.search_query,retObj.formatted_query,retObj.latitude,retObj.longitude];
-              client.query(sql,safe)
+              let safe = [retObj.search_query, retObj.formatted_query, retObj.latitude, retObj.longitude];
+              client.query(sql, safe)
                 .then()
             }).catch(err => console.log(err))
-        } else{
+        } else {
           console.log('DB DATA')
           res.status(200).send(dbData.rows[0]);
         }
       }).catch(err => console.log(err))
-  }catch(err){
+  } catch (err) {
     res.status(500).send('Sorry, something went wrong');
   }
 })
 ///////////////////////LOCATION CONSTRUCTOR////////////////////////////
-function Location(search,obj){
-  this.search_query=search;
-  this.formatted_query=obj.display_name;
-  this.latitude=obj.lat;
-  this.longitude=obj.lon;
+function Location(search, obj) {
+  this.search_query = search;
+  this.formatted_query = obj.display_name;
+  this.latitude = obj.lat;
+  this.longitude = obj.lon;
 }
 //////////////////////////Weather route////////////////////////////////
-app.get('/weather', (req,res)=>{
-  try{
+app.get('/weather', (req, res) => {
+  try {
     let loc = req.query.search_query;
     let url = `${process.env.WEA_API}?city=${loc}&units=i&key=${process.env.WEA_KEY}`;
     superagent.get(url)
       .then(apiData => {
-        let retArr = apiData.body.data.map((obj)=> new Weather(obj))
+        let retArr = apiData.body.data.map((obj) => new Weather(obj))
         res.status(200).send(retArr);
       }).catch(err => console.log(err))
-  }catch(err){
+  } catch (err) {
     res.status(500).send('Sorry, something went wrong');
   }
 })
 
 //////////////////////////WEATHER CONSTRUCTOR//////////////////////////
-function Weather(obj){
-  this.forecast=obj.weather.description;
-  this.time=obj.valid_date;
+function Weather(obj) {
+  this.forecast = obj.weather.description;
+  this.time = obj.valid_date;
 }
 /////////////////////////////Trail route///////////////////////////////
-app.get('/trails', (req,res) => {
-  try{
-    let loc = [req.query.latitude,req.query.longitude];
+app.get('/trails', (req, res) => {
+  try {
+    let loc = [req.query.latitude, req.query.longitude];
     let url = `${process.env.TRAIL_API}?lat=${loc[0]}&lon=${loc[1]}&maxDistance=10&key=${process.env.TRAIL_KEY}`
     superagent.get(url)
       .then(apiData => {
-        let retArr=apiData.body.trails.map(obj => new Trail(obj));
+        let retArr = apiData.body.trails.map(obj => new Trail(obj));
         res.status(200).send(retArr);
       }).catch(err => console.log(err))
-  }catch(err){
+  } catch (err) {
     res.status(500).send('Sorry, something went wrong');
   }
 })
 ////////////////////////////TRAIL CONSTRUCTOR//////////////////////////
-function Trail(obj){
-  this.name=obj.name;
-  this.location=obj.location;
-  this.length=obj.length;
-  this.stars=obj.stars;
-  this.star_votes=obj.starVotes;
-  this.summary=obj.summary;
-  this.trail_url=obj.url;
-  this.conditions=`${obj.conditionDetails || ''} ${obj.conditionStatus}`;
+function Trail(obj) {
+  this.name = obj.name;
+  this.location = obj.location;
+  this.length = obj.length;
+  this.stars = obj.stars;
+  this.star_votes = obj.starVotes;
+  this.summary = obj.summary;
+  this.trail_url = obj.url;
+  this.conditions = `${obj.conditionDetails || ''} ${obj.conditionStatus}`;
   this.condition_date = obj.conditionDate.split(' ')[0];
   this.condition_time = obj.conditionDate.split(' ')[1];
 }
 
 ////////////////////////////All other routes///////////////////////////
-app.get('*', (req,res)=>{
+app.get('*', (req, res) => {
   res.status(404).send('sorry, this route does not exist');
 })
 client.connect()
-  .then(()=> {
-    app.listen(PORT, ()=> console.log(`Server started on ${PORT}`))
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server started on ${PORT}`))
   });
-
