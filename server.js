@@ -20,7 +20,7 @@ app.get('/location', (req, res) => {
     let safe = [search];
     client.query(sql, safe)
       .then(dbData => {
-        if (dbData.rowCount === 0) {
+        if (!dbData.rowCount) {
           let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
           superagent.get(url)
             .then(apiData => {
