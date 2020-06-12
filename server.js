@@ -118,7 +118,7 @@ function Movie(obj){
   this.total_votes=obj.vote_count;
   this.image_url=`https://image.tmdb.org/t/p/w500${obj.poster_path}`
   this.popularity=obj.popularity;
-  this.released_on=obj.released_date;
+  this.released_on=obj.release_date;
 }
 ////////////////////////////Yelp route/////////////////////////////////
 app.get('/yelp', (req,res)=>{
