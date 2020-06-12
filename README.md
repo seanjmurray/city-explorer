@@ -1,6 +1,6 @@
 # city-explorer
 **Author**: Sean Murray
-**Version**: 2.0.1 
+**Version**: 1.5.0
 
 ## Overview
 This will be a simple API to serve information for the City Explorer Front end.
