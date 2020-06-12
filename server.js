@@ -95,7 +95,58 @@ function Trail(obj) {
   this.condition_date = obj.conditionDate.split(' ')[0];
   this.condition_time = obj.conditionDate.split(' ')[1];
 }
+////////////////////////////Movies route///////////////////////////////
+app.get('/movies', (req,res)=>{
+  let url = process.env.MOV_URL;
+  let query = {
+    api_key: process.env.MOV_KEY,
+    query: req.query.search_query
+  }
+  superagent.get(url)
+    .query(query)
+    .then(apiData =>{
+      let retArr = apiData.body.results.map(obj => new Movie(obj))
+      res.status(200).send(retArr);
+    })
+})
+////////////////////////////MOVIES CONSTRUCTOR/////////////////////////
 
+function Movie(obj){
+  this.title=obj.title;
+  this.overview=obj.overview;
+  this.average_votes=obj.vote_average;
+  this.total_votes=obj.vote_count;
+  this.image_url=`https://image.tmdb.org/t/p/w500${obj.poster_path}`
+  this.popularity=obj.popularity;
+  this.released_on=obj.released_date;
+}
+////////////////////////////Yelp route/////////////////////////////////
+app.get('/yelp', (req,res)=>{
+  let url = process.env.YELP_URL;
+  let query = {
+    limit: 10,
+    latitude: req.query.latitude,
+    longitude: req.query.longitude,
+    categories: 'restaurants'
+  }
+  superagent.get(url)
+    .set({'Authorization': `Bearer ${process.env.YELP_KEY}`})
+    .query(query)
+    .then(apiData =>{
+      let retArr = apiData.body.businesses.map(obj => new Restaurant(obj))
+      res.status(200).send(retArr);
+    })
+})
+
+////////////////////////////YELP CONSTRUCTOR///////////////////////////
+
+function Restaurant(obj){
+  this.name=obj.name;
+  this.image_url=obj.image_url;
+  this.price=obj.price;
+  this.rating=obj.rating;
+  this.url=obj.url;
+}
 ////////////////////////////All other routes///////////////////////////
 app.get('*', (req, res) => {
   res.status(404).send('sorry, this route does not exist');
