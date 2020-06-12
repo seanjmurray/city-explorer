@@ -3,7 +3,8 @@ const superagent = require('superagent');
 function yelpHandler(req,res){
   let url = process.env.YELP_URL;
   let query = {
-    limit: 10,
+    limit: 5,
+    offset: (req.query.page -1) * 5,
     latitude: req.query.latitude,
     longitude: req.query.longitude,
     categories: 'restaurants'
