@@ -12,35 +12,41 @@ const DB = process.env.DATABASE_URL;
 const client = new pg.Client(DB);
 client.on('error', err => console.error(err));
 
+///////////////////////////ROUTES//////////////////////////////////////
+app.get('/location', locationHandler)
+app.get('/weather', weatherHandler)
+app.get('/trails', trailsHandler)
+app.get('/movies', moviesHandler)
+app.get('/yelp', yelpHandler)
+app.use('*', handler404)
 /////////////////////////location route////////////////////////////////
-app.get('/location', (req, res) => {
+function locationHandler(req, res){
   let search = req.query.city
-  try {
-    let sql = 'SELECT * FROM locations WHERE search_query LIKE ($1);';
-    let safe = [search];
-    client.query(sql, safe)
-      .then(dbData => {
-        if (!dbData.rowCount) {
-          let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
-          superagent.get(url)
-            .then(apiData => {
-              let retObj = new Location(search, apiData.body[0]);
-              console.log('API ITEM')
-              res.status(200).send(retObj);
-              let sql = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4);'
-              let safe = [retObj.search_query, retObj.formatted_query, retObj.latitude, retObj.longitude];
-              client.query(sql, safe)
-                .then()
-            }).catch(err => console.log(err))
-        } else {
-          console.log('DB DATA')
-          res.status(200).send(dbData.rows[0]);
-        }
-      }).catch(err => console.log(err))
-  } catch (err) {
-    res.status(500).send('Sorry, something went wrong');
-  }
-})
+  let sql = 'SELECT * FROM locations WHERE search_query LIKE ($1);';
+  let safe = [search];
+  client.query(sql, safe)
+    .then(dbData => {
+      if (!dbData.rowCount) {
+        let url = `${process.env.LOC_API}?key=${process.env.LOC_KEY}&q=${search}&format=json`
+        superagent.get(url)
+          .then(apiData => {
+            let retObj = new Location(search, apiData.body[0]);
+            console.log('API ITEM')
+            res.status(200).send(retObj);
+            let sql = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4);'
+            let safe = [retObj.search_query, retObj.formatted_query, retObj.latitude, retObj.longitude];
+            client.query(sql, safe)
+              .then()
+          }).catch(err => console.log(err))
+      } else {
+        console.log('DB DATA')
+        res.status(200).send(dbData.rows[0]);
+      }
+    }).catch(err => {
+      console.log(err)
+      res.status(500).send('Sorry, something went wrong');
+    })
+}
 ///////////////////////LOCATION CONSTRUCTOR////////////////////////////
 function Location(search, obj) {
   this.search_query = search;
@@ -49,19 +55,18 @@ function Location(search, obj) {
   this.longitude = obj.lon;
 }
 //////////////////////////Weather route////////////////////////////////
-app.get('/weather', (req, res) => {
-  try {
-    let loc = req.query.search_query;
-    let url = `${process.env.WEA_API}?city=${loc}&units=i&key=${process.env.WEA_KEY}`;
-    superagent.get(url)
-      .then(apiData => {
-        let retArr = apiData.body.data.map((obj) => new Weather(obj))
-        res.status(200).send(retArr);
-      }).catch(err => console.log(err))
-  } catch (err) {
-    res.status(500).send('Sorry, something went wrong');
-  }
-})
+function weatherHandler(req, res){
+  let loc = req.query.search_query;
+  let url = `${process.env.WEA_API}?city=${loc}&units=i&key=${process.env.WEA_KEY}`;
+  superagent.get(url)
+    .then(apiData => {
+      let retArr = apiData.body.data.map((obj) => new Weather(obj))
+      res.status(200).send(retArr);
+    }).catch(err => {
+      console.log(err)
+      res.status(500).send('Sorry, something went wrong');
+    })
+}
 
 //////////////////////////WEATHER CONSTRUCTOR//////////////////////////
 function Weather(obj) {
@@ -69,19 +74,18 @@ function Weather(obj) {
   this.time = obj.valid_date;
 }
 /////////////////////////////Trail route///////////////////////////////
-app.get('/trails', (req, res) => {
-  try {
-    let loc = [req.query.latitude, req.query.longitude];
-    let url = `${process.env.TRAIL_API}?lat=${loc[0]}&lon=${loc[1]}&maxDistance=10&key=${process.env.TRAIL_KEY}`
-    superagent.get(url)
-      .then(apiData => {
-        let retArr = apiData.body.trails.map(obj => new Trail(obj));
-        res.status(200).send(retArr);
-      }).catch(err => console.log(err))
-  } catch (err) {
-    res.status(500).send('Sorry, something went wrong');
-  }
-})
+function trailsHandler(req, res){
+  let loc = [req.query.latitude, req.query.longitude];
+  let url = `${process.env.TRAIL_API}?lat=${loc[0]}&lon=${loc[1]}&maxDistance=10&key=${process.env.TRAIL_KEY}`
+  superagent.get(url)
+    .then(apiData => {
+      let retArr = apiData.body.trails.map(obj => new Trail(obj));
+      res.status(200).send(retArr);
+    }).catch(err => {
+      console.log(err)
+      res.status(500).send('Sorry, something went wrong');
+    })
+}
 ////////////////////////////TRAIL CONSTRUCTOR//////////////////////////
 function Trail(obj) {
   this.name = obj.name;
@@ -96,7 +100,7 @@ function Trail(obj) {
   this.condition_time = obj.conditionDate.split(' ')[1];
 }
 ////////////////////////////Movies route///////////////////////////////
-app.get('/movies', (req,res)=>{
+function moviesHandler(req,res){
   let url = process.env.MOV_URL;
   let query = {
     api_key: process.env.MOV_KEY,
@@ -107,8 +111,11 @@ app.get('/movies', (req,res)=>{
     .then(apiData =>{
       let retArr = apiData.body.results.map(obj => new Movie(obj))
       res.status(200).send(retArr);
+    }).catch(err => {
+      console.log(err)
+      res.status(500).send('Sorry, something went wrong');
     })
-})
+}
 ////////////////////////////MOVIES CONSTRUCTOR/////////////////////////
 
 function Movie(obj){
@@ -121,7 +128,7 @@ function Movie(obj){
   this.released_on=obj.release_date;
 }
 ////////////////////////////Yelp route/////////////////////////////////
-app.get('/yelp', (req,res)=>{
+function yelpHandler(req,res){
   let url = process.env.YELP_URL;
   let query = {
     limit: 10,
@@ -135,8 +142,11 @@ app.get('/yelp', (req,res)=>{
     .then(apiData =>{
       let retArr = apiData.body.businesses.map(obj => new Restaurant(obj))
       res.status(200).send(retArr);
+    }).catch(err => {
+      console.log(err)
+      res.status(500).send('Sorry, something went wrong');
     })
-})
+}
 
 ////////////////////////////YELP CONSTRUCTOR///////////////////////////
 
@@ -148,9 +158,10 @@ function Restaurant(obj){
   this.url=obj.url;
 }
 ////////////////////////////All other routes///////////////////////////
-app.get('*', (req, res) => {
+function handler404(req, res){
   res.status(404).send('sorry, this route does not exist');
-})
+}
+
 client.connect()
   .then(() => {
     app.listen(PORT, () => console.log(`Server started on ${PORT}`))
